@@ -1,55 +1,40 @@
-import { interpolate } from "remotion";
 import { AbsoluteFill } from "remotion";
-import React from "react";
+import React, { useMemo } from "react";
 import { PathInternals, getLength } from "@remotion/paths";
 import { makeCircle } from "@remotion/shapes";
 
-export const FINAL_RADIUS = 400;
+export const FINAL_RADIUS = 720;
 
 export const Ray: React.FC<{
   i: number;
   color: string;
   sliceLength: number;
-  progress: number;
-  finalStrokeWidth: number;
   rotation: number;
-  initialRadius: number;
-}> = ({
-  color,
-  i,
-  sliceLength,
-  progress,
-  finalStrokeWidth,
-  rotation,
-  initialRadius,
-}) => {
-  const strokeWidth = interpolate(
-    progress,
-    [0, 1],
-    [initialRadius, finalStrokeWidth]
-  );
-
-  console.log(FINAL_RADIUS, strokeWidth);
-  const circle = makeCircle({
-    radius: FINAL_RADIUS - strokeWidth / 2,
-  });
+  radius: number;
+  strokeWidth: number;
+}> = ({ color, i, sliceLength, rotation, radius, strokeWidth }) => {
+  const circle = useMemo(() => {
+    return makeCircle({
+      radius: radius - strokeWidth / 2,
+    });
+  }, [radius, strokeWidth]);
 
   const { path } = circle;
 
   const length = getLength(path);
 
   const pathLength = length * sliceLength;
-  const cutPath = PathInternals.cutPath(path, pathLength);
 
-  const scale = interpolate(progress, [0, 1], [0.2, 1]);
-  const opacity = interpolate(progress, [0, 1], [0.8, 1]);
+  const cutPath = useMemo(() => {
+    return PathInternals.cutPath(path, pathLength);
+  }, [path, pathLength]);
 
   return (
     <AbsoluteFill
       style={{
         justifyContent: "center",
         alignItems: "center",
-        transform: `scale(${scale}) rotate(${rotation}rad)`,
+        transform: `rotate(${rotation}rad)`,
       }}
     >
       <svg
@@ -58,7 +43,6 @@ export const Ray: React.FC<{
         style={{
           overflow: "visible",
           transformOrigin: "center center",
-          opacity,
           width: circle.width,
           height: circle.height,
         }}
